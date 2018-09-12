@@ -11,45 +11,38 @@ import java.util.ArrayList;
  */
 
 public class Product {
+    private String id;
     private String name;
-    private String category;
     private String description;
-    private String img;
+    private String image;
+    private String price;
+    private String likes;
+    private String rating;
 
-    public Product(String name, String category, String description, String img ) {
+    public Product(String id, String name, String description, String image, String price,String likes, String rating ) {
+        this.id = id;
         this.name=name;
-        this.category=category;
         this.description=description;
-        this.img=img;
+        this.image=image;
+        this.price = price;
+        this.likes = likes;
+        this.rating = rating;
     }
 
     // Constructor to convert JSON object into a Java class instance
     public Product(JSONObject object)
     {
         try {
+            this.id = object.getString("id");
             this.name = object.getString("name");
-            this.category = object.getString("category");
             this.description = object.getString("description");
-            this.img = object.getString("img");
+            this.image = object.getString("image");
+            this.price = object.getString("price");
+            this.likes = object.getString("likes");
+            this.rating = object.getString("rating");
         } catch (JSONException e) {
             e.printStackTrace();
         }
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getImg() {
-        return img;
     }
 
     // Factory method to convert an array of JSON objects into a list of objects
@@ -66,4 +59,22 @@ public class Product {
         }
         return products;
     }
+
+    public String getId() {
+        return id;
+    }
+    public String getName() {
+        return name;
+    }
+    public String getDescription() {
+        return description;
+    }
+    public String getImage() {
+        return image;
+    }
+    public String getPrice() {
+        return price;
+    }
+    public String getLikes(){return this.likes;}
+    public String getRating(){return this.rating;}
 }

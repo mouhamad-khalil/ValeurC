@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.isae.mohamad.mahallat.MainActivity"
+    tools:context="com.isae.mohamad.mahallat.LoginActivity"
     tools:layout_editor_absoluteY="81dp">
 
     <TextView
@@ -97,6 +97,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="132dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:onClick="ForgetPasswordClick"
         android:text="Forget password ?"
         android:textColor="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"

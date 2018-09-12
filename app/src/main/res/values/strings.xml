@@ -17,4 +17,23 @@
     <string name="title_activity_products">ProductsActivity</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_maps">Map</string>
+
+    <string name="pattern_solid">Solid</string>
+    <string name="pattern_dotted">Dotted</string>
+    <string name="pattern_dashed">Dashed</string>
+    <string name="pattern_mixed">Mixed</string>
+
+    <string name="map_circle_description">Google Map with circles.</string>
+
+    <string name="stroke_alpha">Stroke Alpha</string>
+    <string name="stroke_hue">Stroke Hue</string>
+    <string name="stroke_joint_type">Stroke Joint Type</string>
+    <string name="stroke_pattern">Stroke Pattern</string>
+    <string name="stroke_width">Stroke Width</string>
+
+    <string name="fill_alpha">Fill Alpha</string>
+    <string name="fill_hue">Fill Hue</string>
+
+    <string name="properties_circle">Properties for Circle(s)</string>
+    <string name="clickable">Clickable</string>
 </resources>

@@ -5,8 +5,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.isae.mohamad.mahallat.R;
 
 import java.util.ArrayList;
@@ -18,7 +20,8 @@ import java.util.ArrayList;
 public class ProductAdapter extends ArrayAdapter<Product> {
     private static class ViewHolder {
         TextView name;
-        TextView home;
+        TextView description;
+        ImageView image;
     }
 
     public ProductAdapter(Context context, ArrayList<Product> products) {
@@ -37,7 +40,8 @@ public class ProductAdapter extends ArrayAdapter<Product> {
             LayoutInflater inflater = LayoutInflater.from(getContext());
             convertView = inflater.inflate(R.layout.list_item, parent, false);
             viewHolder.name = (TextView) convertView.findViewById(R.id.title);
-            viewHolder.home = (TextView) convertView.findViewById(R.id.description);
+            viewHolder.description = (TextView) convertView.findViewById(R.id.description);
+            viewHolder.image = (ImageView) convertView.findViewById(R.id.imageView) ;
             // Cache the viewHolder object inside the fresh view
             convertView.setTag(viewHolder);
         } else {
@@ -47,7 +51,12 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         // Populate the data from the data object via the viewHolder object
         // into the template view.
         viewHolder.name.setText(product.getName());
-        viewHolder.home.setText(product.getDescription());
+        viewHolder.description.setText(product.getDescription());
+        GlideApp.with(convertView)
+                .load(product.getImage())
+                .fitCenter()
+                .placeholder(R.drawable.spinner)
+                .into(viewHolder.image);
         // Return the completed view to render on screen
         return convertView;
     }
