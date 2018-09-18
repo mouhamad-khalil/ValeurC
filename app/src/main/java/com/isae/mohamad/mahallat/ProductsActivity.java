@@ -6,7 +6,7 @@ import android.support.v7.widget.Toolbar;
 import android.widget.ListView;
 
 import com.isae.mohamad.mahallat.Classes.Product;
-import com.isae.mohamad.mahallat.Classes.ProductAdapter;
+import com.isae.mohamad.mahallat.Classes.utilities.ProductAdapter;
 
 import java.util.ArrayList;
 

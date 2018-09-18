@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -24,44 +24,48 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
-        <activity android:name="com.isae.mohamad.mahallat.MainActivity">
+
+        <meta-data android:name="com.isae.mohamad.mahallat.Classes.utilities.MyAppGlideModule"
+            android:value="AppGlideModule"/>
+
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.isae.mohamad.mahallat.LoginActivity"
-            android:label="@string/title_activity_login" >
+        <activity
+            android:name=".LoginActivity"
+            android:label="@string/title_activity_login">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.isae.mohamad.mahallat.MainActivity" />
         </activity>
         <activity
-            android:name="com.isae.mohamad.mahallat.LoginActivity2"
+            android:name=".LoginActivity2"
             android:label="@string/title_activity_login" />
-        <activity android:name="com.isae.mohamad.mahallat.RegisterActivity">
+        <activity android:name=".RegisterActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.isae.mohamad.mahallat.LoginActivity" />
         </activity>
         <activity
-            android:name="com.isae.mohamad.mahallat.ForgetPassActivity"
+            android:name=".ForgetPassActivity"
             android:label="ForgetPassword">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.isae.mohamad.mahallat.LoginActivity" />
         </activity>
         <activity
-            android:name="com.isae.mohamad.mahallat.ProductsActivity"
+            android:name=".ProductsActivity"
             android:label="@string/title_activity_products"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.isae.mohamad.mahallat.MainActivity" />
         </activity>
-
-
+        <activity android:name=".StoresActivity"></activity>
     </application>
 
 </manifest>

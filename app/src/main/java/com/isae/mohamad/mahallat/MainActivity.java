@@ -1,6 +1,7 @@
 package com.isae.mohamad.mahallat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -15,12 +16,16 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.google.android.gms.location. FusedLocationProviderClient;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -31,10 +36,13 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.isae.mohamad.mahallat.Classes.utilities.CustomInfoWindowGoogleMap;
+import com.isae.mohamad.mahallat.Classes.utilities.InfoWindowData;
 
 
-public class MainActivity extends AppCompatActivity
-        implements OnMapReadyCallback,OnMarkerClickListener {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        LocationListener, OnMarkerClickListener,GoogleMap.OnInfoWindowClickListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
@@ -44,7 +52,13 @@ public class MainActivity extends AppCompatActivity
     // The entry point to the Fused Location Provider.
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation;
-    private GoogleMap mMap;
+    LocationRequest mLocationRequest;
+    GoogleApiClient mGoogleApiClient;
+
+    LatLng latLng;
+    GoogleMap mMap;
+    SupportMapFragment mFragment;
+    Marker mCurrLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,9 +84,8 @@ public class MainActivity extends AppCompatActivity
                     ShowMyLocation();
                 }
             });
-            SupportMapFragment mapFragment =
-                    (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-            mapFragment.getMapAsync(this);
+            mFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+            mFragment.getMapAsync(this);
 
             /*mapFragment.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
                 @Override
@@ -85,9 +98,7 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
             });*/
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -99,16 +110,22 @@ public class MainActivity extends AppCompatActivity
         enableMyLocationIfPermitted();
 
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        mMap.setMinZoomPreference(11);
+        //mMap.setMinZoomPreference(11);
+        mMap.getUiSettings().setZoomGesturesEnabled(true);
+        mMap.getUiSettings().setScrollGesturesEnabled(true);
+        mMap.getUiSettings().setTiltGesturesEnabled(true);
+        mMap.getUiSettings().setRotateGesturesEnabled(true);
+        buildGoogleApiClient();
 
+        mGoogleApiClient.connect();
         try {
             ShowMyLocation();
-        }catch(Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         // Set a listener for marker click.
         mMap.setOnMarkerClickListener(this);
+        mMap.setOnInfoWindowClickListener(this);
 
     }
 
@@ -152,9 +169,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void ShowMyLocation()
-    {
-        mMap.setMinZoomPreference(12);
+    public void ShowMyLocation() {
+        //mMap.setMinZoomPreference(12);
         getDeviceLocation();
         /*CircleOptions circleOptions = new CircleOptions();
         circleOptions.center(new LatLng(location.getLatitude(),
@@ -181,8 +197,12 @@ public class MainActivity extends AppCompatActivity
                         if (task.isSuccessful()) {
                             // Set the map's camera position to the current location of the device.
                             mLastKnownLocation = (Location) task.getResult();
-
-                            LatLng redmond = new LatLng(mLastKnownLocation.getLatitude(),mLastKnownLocation.getLongitude());
+                            if (mLastKnownLocation == null) {
+                                mLastKnownLocation = new Location("");
+                                mLastKnownLocation.setLatitude(mDefaultLocation.latitude);
+                                mLastKnownLocation.setLongitude(mDefaultLocation.longitude);
+                            }
+                            LatLng redmond = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
 
                             CircleOptions circleOptions = new CircleOptions();
                             circleOptions.center(redmond);
@@ -205,10 +225,10 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
             }
-        } catch(SecurityException e)  {
+        } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
-        return  mLastKnownLocation;
+        return mLastKnownLocation;
     }
 
     /** Called when the user clicks a marker. */
@@ -234,5 +254,122 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
+    @SuppressLint("RestrictedApi")
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Toast.makeText(this,"Resuming",Toast.LENGTH_SHORT).show();
+        if(mGoogleApiClient != null) {
+            mLocationRequest = new LocationRequest();
+            mLocationRequest.setInterval(5000); //5 second
+            mLocationRequest.setFastestInterval(3000); //3 second
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        //Unregister for location callbacks:
+        if (mGoogleApiClient != null) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        }
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        Toast.makeText(this, "buildGoogleApiClient", Toast.LENGTH_SHORT).show();
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+    }
+
+
+    @SuppressLint("RestrictedApi")
+    @Override
+    public void onConnected(Bundle bundle) {
+        Toast.makeText(this, "onConnected", Toast.LENGTH_SHORT).show();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mLastLocation != null) {
+            //place marker at current position
+            mMap.setMinZoomPreference(11);
+            mMap.clear();
+            latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.position(latLng);
+            markerOptions.title("Current Position");
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+
+            InfoWindowData info = new InfoWindowData();
+            info.setImage("https://nyoobserver.files.wordpress.com/2015/12/unnamed2.jpg");
+            info.setHotel("Hotel : excellent hotels available");
+            info.setFood("Food : all types of restaurants available");
+            info.setTransport("Reach the site by bus, car and train.");
+
+            CustomInfoWindowGoogleMap customInfoWindow = new CustomInfoWindowGoogleMap(this);
+            mMap.setInfoWindowAdapter(customInfoWindow);
+            mCurrLocation = mMap.addMarker(markerOptions);
+            mCurrLocation.setTag(info);
+            mCurrLocation.showInfoWindow();
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        }
+
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(5000); //5 second
+        mLocationRequest.setFastestInterval(3000); //3 second
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        //mLocationRequest.setSmallestDisplacement(0.1F); //1/10 meter
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Toast.makeText(this,"onConnectionSuspended",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Toast.makeText(this,"onConnectionFailed",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+        //remove previous current location marker and add new one at current position
+        if (mCurrLocation != null) {
+            mCurrLocation.remove();
+        }
+        latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title("Current Position");
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+        mCurrLocation = mMap.addMarker(markerOptions);
+
+        Toast.makeText(this,"Location Changed",Toast.LENGTH_SHORT).show();
+
+        //If you only need one location, unregister the listener
+        //LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Toast.makeText(this, "Info window clicked",
+                Toast.LENGTH_SHORT).show();
+    }
 
 }
