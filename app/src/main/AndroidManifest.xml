@@ -24,9 +24,9 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
-
-        <meta-data android:name="com.isae.mohamad.mahallat.Classes.utilities.MyAppGlideModule"
-            android:value="AppGlideModule"/>
+        <meta-data
+            android:name="com.isae.mohamad.mahallat.Classes.utilities.MyAppGlideModule"
+            android:value="AppGlideModule" />
 
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -45,7 +45,9 @@
         <activity
             android:name=".LoginActivity2"
             android:label="@string/title_activity_login" />
-        <activity android:name=".RegisterActivity">
+        <activity
+            android:name=".RegisterActivity"
+            android:label="Register">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.isae.mohamad.mahallat.LoginActivity" />
@@ -65,7 +67,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.isae.mohamad.mahallat.MainActivity" />
         </activity>
-        <activity android:name=".StoresActivity"></activity>
+        <activity android:name=".StoreActivity" />
+        <activity android:name=".ProductDetailsActivity"></activity>
     </application>
 
 </manifest>
