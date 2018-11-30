@@ -7,8 +7,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.logging.StreamHandler;
 
-import javax.sql.StatementEvent;
-
 /**
  * Created by mohamad on 08/30/2018.
  */
@@ -18,16 +16,14 @@ public class Comment {
     private String productId;
     private String storeId;
     private String userId;
-    private String username;
     private String text;
     private String createdAt;
 
-    public Comment(String id, String productId, String storeId, String userId, String username, String text,String createdAt) {
+    public Comment(String id, String productId, String storeId, String userId, String text,String createdAt) {
         this.id = id;
         this.productId = productId;
         this.storeId = storeId;
         this.userId = userId;
-        this.username = username;
         this.text = text;
         this.createdAt = createdAt;
     }
@@ -40,7 +36,6 @@ public class Comment {
             this.productId = object.getString("product_id");
             this.storeId = object.getString("store_id");
             this.userId = object.getString("user_id");
-            this.username = object.getString("username");
             this.text = object.getString("text");
             this.createdAt = object.getString("created_at");
         } catch (JSONException e) {
@@ -67,7 +62,6 @@ public class Comment {
     public String getProductId() {return this.productId;}
     public String getStoreId() {return this.storeId;}
     public String getUserId() {return this.userId;}
-    public String getUsername() {return this.username;}
     public String getText() {return this.text;}
     public String getCreatedAt() {return this.createdAt;}
 }

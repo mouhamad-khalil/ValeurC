@@ -368,8 +368,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        Intent StoreIntent = new Intent(getApplicationContext(), StoreActivity.class);
-        startActivity(StoreIntent);
+        Toast.makeText(this, "Info window clicked",
+                Toast.LENGTH_SHORT).show();
     }
 
 }
