@@ -5,21 +5,29 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.GridView;
-import android.widget.ListView;
 
 import com.isae.mohamad.mahallat.Classes.Category;
-import com.isae.mohamad.mahallat.Classes.Comment;
 import com.isae.mohamad.mahallat.Classes.utilities.CategoryAdapter;
-import com.isae.mohamad.mahallat.Classes.utilities.CommentAdapter;
-import com.isae.mohamad.mahallat.R;
 
 import java.util.ArrayList;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
+import com.android.volley.Response;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+import com.isae.mohamad.mahallat.Classes.utilities.Constants;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -35,6 +43,8 @@ public class StoreCategoriesFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
+    RequestQueue requestQueue;
+    GridView gridView;
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
@@ -75,40 +85,27 @@ public class StoreCategoriesFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        final Context context = this.getContext();
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_store_categories, container, false);
 
-        final GridView gridView = (GridView)view.findViewById(R.id.gridView);
+        gridView = (GridView)view.findViewById(R.id.gridView);
 
-        Category category1 = new Category("1","Category 1", "Code 1", "Description 1");
-        Category category2 = new Category("2","Category 2", "Code 2", "Description 2");
-        Category category3 = new Category("3","Category 3", "Code 3", "Description 3");
-        Category category4 = new Category("4","Category 4", "Code 4", "Description 4");
-        Category category5 = new Category("5","Category 5", "Code 5", "Description 5");
-
-
-        ArrayList<Category> categories = new ArrayList<Category>();
-
-        categories.add(category1);
-        categories.add(category2);
-        categories.add(category3);
-        categories.add(category4);
-        categories.add(category5);
-
-        CategoryAdapter categoryAdapter = new CategoryAdapter(this.getContext(), categories);
-
-
-        gridView.setAdapter(categoryAdapter);
+        requestQueue = Volley.newRequestQueue(context);
+        getCategories(context);
 
         // When the user clicks on the GridItem
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                //Object o = gridView.getItemAtPosition(position);
-                //Category category = (Category) o;
-                Intent LoginIntent = new Intent(v.getContext(), ProductsActivity.class);
-                startActivity(LoginIntent);
+                try {
+                    Category category = (Category) gridView.getItemAtPosition(position);
+                    Intent ProductsIntent = new Intent(v.getContext(), ProductsActivity.class);
+                    ProductsIntent.putExtra("CategoryId", category.getId());
+                    startActivity(ProductsIntent);
+                }
+                catch(Exception e){}
             }
         });
         return view;
@@ -151,5 +148,36 @@ public class StoreCategoriesFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+    }
+
+    private void getCategories(Context context) {
+        final Context c = context;
+        JsonArrayRequest arrReq = new JsonArrayRequest(Request.Method.GET, Constants.Get_Categories_API,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+
+                        if (response.length() > 0) {
+                            ArrayList<Category> categories = new ArrayList<Category>();
+                            categories = Category.fromJson(response);
+                            CategoryAdapter categoryAdapter = new CategoryAdapter(c, categories);
+                            gridView.setAdapter(categoryAdapter);
+                        }
+
+                    }
+                },
+
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // If there a HTTP error then add a note to our repo list.
+                        //setRepoListText("Error while calling REST API");
+                        Log.e("Volley", error.toString());
+                    }
+                }
+        );
+        // Add the request we just defined to our request queue.
+        // The request queue will automatically handle the request as soon as it can.
+        requestQueue.add(arrReq);
     }
 }

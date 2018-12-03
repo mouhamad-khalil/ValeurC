@@ -9,52 +9,56 @@ import java.security.PublicKey;
 
 public class Constants {
 
-    public static final String TAG = "MahallatApp";
-
-    public static final String SERVER_IP = "http://142.93.100.254:8080/";
-
-    public static final String SP_NAME = "MahallatLogin";
-    public static final String SP_CREDENTIALS = "Credentials";
-    public static final String SP_LOGGEDIN = "LoggedIn";
-
     //************************************************************************
     // Store
     //************************************************************************
-    public static final String Global_API = SERVER_IP + "api/";
+    public static final String Global_API = "http://142.93.100.254:8080/api/";
     public static final String Get_All_Stores_API = Global_API + "stores";
     public static final String Get_Store_By_Id_API = Global_API + "store/";
-    public static final String Put_Store_Rate_API = Global_API + "store/rate/{store_id}";
-    public static final String Get_Store_Products = Global_API + "store/{store_id}/products";
+    public static final String Put_Store_Rate = Global_API + "store/rate/";
+    public static final String Get_Store_Products = Global_API + "store/{0}/products";
 
     //************************************************************************
     // Product
     //************************************************************************
     public static final String Get_Product_By_Id_API = Global_API + "product/";
-    public static final String Put_Product_Rate_API = Global_API + "product/rate/{product_id}";
+    public static final String Put_Product_Rate = Global_API + "product/rate/";
 
     //************************************************************************
     // Category
     //************************************************************************
     public static final String Get_Categories_API = Global_API + "categories";
-    public static final String Get_Category_Products_API = Global_API + "category/{0}/products";
+    public static final String Get_Category_Products_API = Global_API + "/category/{0}/products";
 
     //************************************************************************
     // User
     //************************************************************************
     public static final String User_Register_API = Global_API + "user/register";
-    public static final String User_login_API = SERVER_IP + "login";
-    public static final String User_Forget_Password_API = Global_API + "forgot-password";
+    public static final String User_login_API = Global_API + "user/login";
+    public static final String User_Reset_Password_API = Global_API + "user/reset";
 
     //************************************************************************
     // Comment
     //************************************************************************
-    public static final String Post_Comment_API = Global_API + "comment/add";
 
 
     //************************************************************************
     // Geofence
     //************************************************************************
-    public static final float GEOFENCE_RADIUS = 500.0f; // in meters
+    public static final String KEY_GEOFENCE_ID = "geofence_id";
 
+    // Keys for flattened geofences stored in SharedPreferences.
+    public static final String KEY_LATITUDE = "com.isae.mahallat.KEY_LATITUDE";
+    public static final String KEY_LONGITUDE = "com.isae.mahallat.KEY_LONGITUDE";
+    public static final String KEY_RADIUS = "com.isae.mahallat.KEY_RADIUS";
+    public static final String KEY_EXPIRATION_DURATION = "com.isae.mahallat.KEY_EXPIRATION_DURATION";
+    public static final String KEY_TRANSITION_TYPE = "com.isae.mahallat.KEY_TRANSITION_TYPE";
+    // The prefix for flattened geofence keys.
+    public static final String KEY_PREFIX = "com.isae.mahallat.KEY";
+
+    // Invalid values, used to test geofence storage when retrieving geofences.
+    public static final long INVALID_LONG_VALUE = -999l;
+    public static final float INVALID_FLOAT_VALUE = -999.0f;
+    public static final int INVALID_INT_VALUE = -999;
 
 }

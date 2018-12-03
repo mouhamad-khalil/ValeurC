@@ -16,23 +16,32 @@ public class Store {
     private String id;
     private String name;
     private String description;
-    private LatLng latLng;
+    private double latitude;
+    private double longitude;
     private String openHour;
     private String closeHour;
     private String image;
-    private String likes;
-    private String rating;
+    private int likes;
+    private double rating;
+    private boolean liked;
+    private boolean rated;
+    private double rate;
 
-    public Store(String id, String name, String description, String lat,String lng,String openHour,String closeHour, String image, String likes, String rating ) {
+    public Store(String id, String name, String description, double lat,double lng,String openHour,String closeHour,
+                 String image, int likes, double rating, boolean liked, boolean rated, double rate) {
         this.id = id;
         this.name=name;
         this.description=description;
-        this.latLng = new LatLng( Double.parseDouble(lat),Double.parseDouble(lng));
+        this.latitude = lat;
+        this.longitude = lng;
         this.openHour = openHour;
         this.closeHour = closeHour;
         this.image=image;
         this.likes = likes;
         this.rating = rating;
+        this.liked = liked;
+        this.rated = rated;
+        this.rate = rate;
     }
 
     // Constructor to convert JSON object into a Java class instance
@@ -42,14 +51,16 @@ public class Store {
             this.id = object.getString("id");
             this.name = object.getString("name");
             this.description = object.getString("description");
-            Double lat = Double.parseDouble(object.getString("description"));
-            Double lng = Double.parseDouble(object.getString("description"));
-            this.latLng = new LatLng(lat,lng);
-            this.openHour = object.getString("image");
-            this.closeHour = object.getString("image");
+            this.latitude = object.getDouble("latitude");
+            this.longitude = object.getDouble("longitude");
+            this.openHour = object.getString("openHour");
+            this.closeHour = object.getString("closeHour");
             this.image = object.getString("image");
-            this.likes = object.getString("likes");
-            this.rating = object.getString("rating");
+            this.likes = object.getInt("likeCount");
+            this.rating = object.getDouble("averageRating");
+            this.liked = object.getBoolean("liked");
+            this.rated = object.getBoolean("rated");
+            this.rate = object.getDouble("rate");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -73,11 +84,14 @@ public class Store {
     public String getId() {return this.id;}
     public String getName(){return this.name;}
     public String getDescription() {return this.description;}
-    public LatLng getLatLng(){return this.latLng;}
+    public double getLatitude() {return this.latitude;}
+    public double getLongitude() {return this.longitude;}
     public String getOpenHour() {return this.openHour;}
     public String getCloseHour() {return this.closeHour;}
     public String getImage() {return this.image;}
-    public String getLikes() {return this.likes;}
-    public String getRating() {return this.rating;}
-
+    public int getLikes() {return this.likes;}
+    public double getRating() {return this.rating;}
+    public boolean getLiked() {return this.liked;}
+    public boolean getRated() {return this.rated;}
+    public double getRate() {return this.rate;}
 }

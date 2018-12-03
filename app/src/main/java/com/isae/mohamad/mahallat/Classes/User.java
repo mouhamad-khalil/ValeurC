@@ -45,6 +45,21 @@ public class User {
         }
     }
 
+    public JSONObject ToJson()
+    {
+        JSONObject user = new JSONObject();
+        try {
+            user.put("username", this.getUsername());
+            user.put("name", this.getName());
+            user.put("lastname", this.getLastname());
+            user.put("password", this.getPassword());
+            user.put("email", this.getEmail());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        return user;
+    }
+
     public String getId(){return this.id;}
     public String getUsername(){return  this.username;}
     public String getEmail(){return this.email;}

@@ -6,9 +6,9 @@ package com.isae.mohamad.mahallat.Classes.utilities;
 
 public class InfoWindowData {
     private String image;
-    private String hotel;
-    private String food;
-    private String transport;
+    private String rating;
+    private String likes;
+    private String category;
 
     public String getImage() {
         return image;
@@ -18,27 +18,27 @@ public class InfoWindowData {
         this.image = image;
     }
 
-    public String getHotel() {
-        return hotel;
+    public String getRating() {
+        return rating;
     }
 
-    public void setHotel(String hotel) {
-        this.hotel = hotel;
+    public void setRating(String rating) {
+        this.rating = rating;
     }
 
-    public String getFood() {
-        return food;
+    public String getLikes() {
+        return likes;
     }
 
-    public void setFood(String food) {
-        this.food = food;
+    public void setLikes(String likes) {
+        this.likes = likes;
     }
 
-    public String getTransport() {
-        return transport;
+    public String getCategory() {
+        return category;
     }
 
-    public void setTransport(String transport) {
-        this.transport = transport;
+    public void setCategory(String category) {
+        this.category = category;
     }
 }
