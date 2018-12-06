@@ -1,4 +1,17 @@
-apply plugin: 'com.android.application'
+apply plugin: 'android'
+
+repositories {
+    mavenCentral()
+    maven { url 'http://repo.spring.io/libs-release' }
+}
+
+configurations.compile {
+    exclude module: 'spring-core'
+    exclude module: 'spring-web'
+    exclude module: 'commons-logging'
+}
+
+
 
 android {
     compileSdkVersion 27
@@ -9,6 +22,7 @@ android {
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
+        //multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -19,19 +33,17 @@ android {
     }
     productFlavors {
     }
+
+    packagingOptions {
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/notice.txt'
+    }
 }
 
 dependencies {
-    /*implementation fileTree(include: ['*.jar'], dir: 'libs')
-                        testImplementation 'junit:junit:4.12'
-                        implementation 'com.android.support:appcompat-v7:27.0.2'
-                        implementation 'com.android.support.constraint:constraint-layout:1.1.2'
-                        implementation 'com.android.support:design:27.0.2'
-                        androidTestImplementation 'com.android.support.test:runner:1.0.2'
-                        androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-                        implementation 'com.github.bumptech.glide:glide:4.8.0'
-                        annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
-                        implementation 'com.google.android.gms:play-services-maps:12.0.1'*/
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.12'
     implementation 'com.android.support:appcompat-v7:27.1.1'
@@ -45,4 +57,24 @@ dependencies {
     // Glide to download the images
     implementation 'com.github.bumptech.glide:glide:4.4.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.4.0'
+
+    compile('org.springframework.android:spring-android-rest-template:1.0.1.RELEASE')
+            {
+                exclude module: 'spring-android-core'
+            }
+    compile('org.springframework.security:spring-security-core:4.1.0.RELEASE')
+            {
+                exclude module: 'spring-aop'
+                exclude module: 'spring-beans'
+                exclude module: 'spring-context'
+                exclude module: 'spring-core'
+                exclude module: 'spring-expression'
+            }
+
+    compile 'com.squareup.retrofit2:retrofit:2.4.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.4.0'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.10.0'
+    compile 'com.squareup.okhttp3:okhttp-urlconnection:3.0.0-RC1'
+
+
 }

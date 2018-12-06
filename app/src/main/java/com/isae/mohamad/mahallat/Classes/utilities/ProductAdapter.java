@@ -11,7 +11,7 @@ import android.widget.TextView;
 import com.isae.mohamad.mahallat.Classes.Product;
 import com.isae.mohamad.mahallat.R;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by mohamad on 08/27/2018.
@@ -24,7 +24,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         ImageView image;
     }
 
-    public ProductAdapter(Context context, ArrayList<Product> products) {
+    public ProductAdapter(Context context, List<Product> products) {
         super(context, R.layout.list_item, products);
     }
 

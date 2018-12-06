@@ -19,12 +19,12 @@
             android:layout_height="33dp"
             android:layout_marginBottom="6dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:text="Put your review"
             android:textSize="24sp"
             app:layout_constraintBottom_toTopOf="@+id/ratingBar"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/txtDescription"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <RatingBar
@@ -42,7 +42,7 @@
             app:layout_scrollFlags="scroll|enterAlways" />
 
         <EditText
-            android:id="@+id/comment"
+            android:id="@+id/txtComment"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
@@ -51,7 +51,7 @@
             android:ems="10"
             android:inputType="textMultiLine"
             android:text="Comment..."
-            app:layout_constraintEnd_toStartOf="@+id/send"
+            app:layout_constraintEnd_toStartOf="@+id/btnSend"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/ratingBar" />
@@ -67,16 +67,83 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/comment" />
+            app:layout_constraintTop_toBottomOf="@+id/txtComment" />
 
         <Button
-            android:id="@+id/send"
+            android:id="@+id/btnSend"
             android:layout_width="wrap_content"
             android:layout_height="43dp"
-            android:layout_marginTop="108dp"
+            android:layout_marginTop="195dp"
+            android:onClick="SendComment"
             android:text="Send"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/lblDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Description"
+            android:textSize="24sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/txtDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="14dp"
+            android:text="Desciption"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/lblDescription" />
+
+        <TextView
+            android:id="@+id/lblOpen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="4dp"
+            android:text="Open hour"
+            app:layout_constraintEnd_toStartOf="@+id/txtOpen"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/txtOpen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="4dp"
+            android:text="8:00 AM"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/lblClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="4dp"
+            android:text="Close hour"
+            app:layout_constraintEnd_toStartOf="@+id/txtClose"
+            app:layout_constraintStart_toStartOf="@+id/lblOpen"
+            app:layout_constraintTop_toBottomOf="@+id/lblOpen" />
+
+        <TextView
+            android:id="@+id/txtClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="4dp"
+            android:text="4:00 PM"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/txtOpen" />
     </android.support.constraint.ConstraintLayout>
 
     </android.support.v4.widget.NestedScrollView>

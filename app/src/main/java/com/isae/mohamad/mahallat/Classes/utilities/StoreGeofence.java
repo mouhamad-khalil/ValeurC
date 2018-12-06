@@ -1,6 +1,7 @@
 package com.isae.mohamad.mahallat.Classes.utilities;
 
 import com.google.android.gms.location.Geofence;
+import com.google.android.gms.maps.model.Marker;
 
 /**
  * Created by mohamad on 10/30/2018.
@@ -9,7 +10,7 @@ import com.google.android.gms.location.Geofence;
 public class StoreGeofence {
 
     // Instance variables
-    private final String mId;
+    private final int mId;
     private final double mLatitude;
     private final double mLongitude;
     private final float mRadius;
@@ -24,7 +25,7 @@ public class StoreGeofence {
      * @param expiration Geofence expiration duration.
      * @param transition Type of Geofence transition.
      */
-    public StoreGeofence(String geofenceId, double latitude, double longitude, float radius,
+    public StoreGeofence(int geofenceId, double latitude, double longitude, float radius,
                           long expiration, int transition) {
         // Set the instance fields from the constructor.
         this.mId = geofenceId;
@@ -36,7 +37,7 @@ public class StoreGeofence {
     }
 
     // Instance field getters.
-    public String getId() {
+    public int getId() {
         return mId;
     }
     public double getLatitude() {
@@ -62,7 +63,7 @@ public class StoreGeofence {
     public Geofence toGeofence() {
         // Build a new Geofence object.
         return new Geofence.Builder()
-                .setRequestId(mId)
+                .setRequestId((String.valueOf(mId)))
                 .setTransitionTypes(mTransitionType)
                 .setCircularRegion(mLatitude, mLongitude, mRadius)
                 .setExpirationDuration(mExpirationDuration)

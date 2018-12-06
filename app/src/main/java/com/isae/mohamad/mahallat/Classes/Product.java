@@ -1,66 +1,54 @@
 package com.isae.mohamad.mahallat.Classes;
 
+import com.google.gson.annotations.SerializedName;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+
+import static com.isae.mohamad.mahallat.Classes.utilities.Constants.SERVER_IP;
 
 /**
  * Created by mohamad on 08/27/2018.
  */
 
-public class Product {
-    private String id;
+public class Product implements Serializable {
+    @SerializedName("id")
+    private int id;
+    @SerializedName("name")
     private String name;
+    @SerializedName("description")
     private String description;
+    @SerializedName("image")
     private String image;
+    @SerializedName("price")
     private String price;
-    private String likes;
-    private String rating;
+    @SerializedName("likeCount")
+    private int likes;
+    @SerializedName("rating")
+    private float rating;
+    @SerializedName("rated")
+    private boolean rated;
+    @SerializedName("rate")
+    private float rate;
+    @SerializedName("comments")
+    private List<Comment> comments;
 
-    public Product(String id, String name, String description, String image, String price,String likes, String rating ) {
+    public Product(int id, String name, String description, String image, String price,int likes, float rating ) {
         this.id = id;
         this.name=name;
         this.description=description;
-        this.image=image;
+        this.image= SERVER_IP + image;
         this.price = price;
         this.likes = likes;
         this.rating = rating;
     }
 
-    // Constructor to convert JSON object into a Java class instance
-    public Product(JSONObject object)
-    {
-        try {
-            this.id = object.getString("id");
-            this.name = object.getString("name");
-            this.description = object.getString("description");
-            this.image = object.getString("image");
-            this.price = object.getString("price");
-            this.likes = object.getString("likes");
-            this.rating = object.getString("rating");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Factory method to convert an array of JSON objects into a list of objects
-    // Product.fromJson(jsonArray);
-    public static ArrayList<Product> fromJson(JSONArray jsonObjects) {
-        ArrayList<Product> products = new ArrayList<Product>();
-
-        for (int i = 0; i < jsonObjects.length(); i++) {
-            try {
-                products.add(new Product(jsonObjects.getJSONObject(i)));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        return products;
-    }
-
-    public String getId() {
+    public int getId() {
         return id;
     }
     public String getName() {
@@ -69,12 +57,13 @@ public class Product {
     public String getDescription() {
         return description;
     }
-    public String getImage() {
-        return image;
-    }
+    public String getImage() {return SERVER_IP + this.image;}
     public String getPrice() {
         return price;
     }
-    public String getLikes(){return this.likes;}
-    public String getRating(){return this.rating;}
+    public int getLikes(){return this.likes;}
+    public float getRating(){return this.rating;}
+    public boolean getRated() {return this.rated;}
+    public float getRate() {return this.rate;}
+    public List<Comment> getComments() {return this.comments;}
 }

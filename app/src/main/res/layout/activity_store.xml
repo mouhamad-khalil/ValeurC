@@ -27,7 +27,7 @@ tools:context="com.isae.mohamad.mahallat.StoreActivity">
         app:toolbarId="@+id/toolbar">
 
         <ImageView
-            android:id="@+id/backdrop"
+            android:id="@+id/background"
             android:layout_width="match_parent"
             android:layout_height="250dp"
             android:scaleType="fitXY"
@@ -37,7 +37,7 @@ tools:context="com.isae.mohamad.mahallat.StoreActivity">
             />
 
 
-        <android.support.v7.widget.Toolbar
+       <android.support.v7.widget.Toolbar
             xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/toolbar"
@@ -46,11 +46,10 @@ tools:context="com.isae.mohamad.mahallat.StoreActivity">
             android:layout_weight="1"
             app:layout_collapseMode="pin"
             app:popupTheme="@style/AppTheme.PopupOverlay"
-            app:layout_scrollFlags="scroll|enterAlways"
+            app:layout_scrollFlags="scroll|enterAlways">
 
-            app:title="mahallat">
 
-            <RatingBar
+        <RatingBar
                 android:id="@+id/ratingBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

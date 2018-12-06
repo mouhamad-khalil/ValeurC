@@ -5,10 +5,20 @@ package com.isae.mohamad.mahallat.Classes.utilities;
  */
 
 public class InfoWindowData {
+    private int id;
     private String image;
     private String rating;
     private String likes;
     private String category;
+    private boolean isLoaded = false;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getImage() {
         return image;
@@ -40,5 +50,13 @@ public class InfoWindowData {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public boolean getIsLoaded() {
+        return isLoaded;
+    }
+
+    public void setIsLoaded(boolean isLoaded) {
+        this.isLoaded = isLoaded;
     }
 }

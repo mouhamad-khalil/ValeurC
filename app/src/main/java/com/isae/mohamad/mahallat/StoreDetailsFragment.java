@@ -1,60 +1,75 @@
 package com.isae.mohamad.mahallat;
 
-import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.RatingBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.gson.JsonObject;
 import com.isae.mohamad.mahallat.Classes.Comment;
+import com.isae.mohamad.mahallat.Classes.Store;
+import com.isae.mohamad.mahallat.Classes.utilities.APIClient;
+import com.isae.mohamad.mahallat.Classes.utilities.APIInterface;
 import com.isae.mohamad.mahallat.Classes.utilities.CommentAdapter;
-import com.isae.mohamad.mahallat.R;
+import com.isae.mohamad.mahallat.Classes.utilities.MyApplication;
 
-import java.util.ArrayList;
+import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
 
 public class StoreDetailsFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private static final String ARG_PARAM = "Store";
+    private Store mStore;
+    TextView txtComment;
+    RatingBar mRatingBar;
 
-    //private OnFragmentInteractionListener mListener;
+    APIInterface apiInterface;
 
     public StoreDetailsFragment() {
-        // Required empty public constructor
     }
 
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
+     * @param store Parameter 1.
      * @return A new instance of fragment StoreDetailsFragment.
      */
-    // TODO: Rename and change types and number of parameters
-    public static StoreDetailsFragment newInstance(String param1, String param2) {
+    public static StoreDetailsFragment newInstance(Store store) {
         StoreDetailsFragment fragment = new StoreDetailsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
+        try {
+            Bundle args = new Bundle();
+            args.putSerializable(ARG_PARAM, store);
+            fragment.setArguments(args);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+        try {
+            if (getArguments() != null) {
+                mStore = (Store) getArguments().getSerializable(ARG_PARAM);
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
         }
     }
 
@@ -64,19 +79,59 @@ public class StoreDetailsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_store_details, container, false);
 
         try {
-            ArrayList<Comment> arrayOfComments = new ArrayList<Comment>();
-            Comment newComment = new Comment("1", "1", "1", "1", "user 1", "New Comment 1", "21/09/2018 7:00 PM");
-            Comment newComment2 = new Comment("2", "2", "2", "2", "user 2", "New Comemnt 2", "22/09/2018 6:00 PM");
-            Comment newComment3 = new Comment("3", "3", "3", "3", "user 3", "New Comment 3", "20/09/2018 5:00 PM");
+            if(mStore != null) {
 
-            arrayOfComments.add(newComment);
-            arrayOfComments.add(newComment2);
-            arrayOfComments.add(newComment3);
-            CommentAdapter adapter = new CommentAdapter(this.getContext(), arrayOfComments);
+                ((TextView) view.findViewById(R.id.txtDescription)).setText(mStore.getDescription());
 
-            ListView listView = (ListView) view.findViewById(R.id.LvComments);
+                SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm:ss");
+                SimpleDateFormat formatShort = new SimpleDateFormat("hh:mm a");
+                Date openHour = inputFormat.parse(mStore.getOpenHour());
+                Date closeHour = inputFormat.parse(mStore.getCloseHour());
+                ((TextView) view.findViewById(R.id.txtOpen)).setText(formatShort.format(openHour));
+                ((TextView) view.findViewById(R.id.txtClose)).setText(formatShort.format(closeHour));
 
-            listView.setAdapter(adapter);
+                // User Review
+                mRatingBar = (RatingBar)view.findViewById(R.id.ratingBar);
+                if(mStore.getRated())
+                    mRatingBar.setRating(mStore.getRate());
+                txtComment = (TextView) view.findViewById(R.id.txtComment);
+
+                Button btnSend = (Button) view.findViewById(R.id.btnSend);
+                btnSend.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SendComment(v);
+                    }
+                });
+
+                mRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener(){
+                    @Override
+                    public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                        SendRate(rating);
+                    }
+                });
+
+                btnSend.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SendComment(v);
+                    }
+                });
+
+                List<Comment> CommentsList = mStore.getComments();
+                CommentAdapter adapter = new CommentAdapter(this.getContext(), CommentsList);
+
+                ListView listView = (ListView) view.findViewById(R.id.LvComments);
+
+                listView.setAdapter(adapter);
+            }
+
+            String credentials =  MyApplication.GetSavedCredentials();
+            if(credentials == null)
+                apiInterface = APIClient.getClient().create(APIInterface.class);
+            else
+                apiInterface = APIClient.getClient(credentials).create(APIInterface.class);
+
         }
         catch (Exception e)
         {
@@ -87,41 +142,57 @@ public class StoreDetailsFragment extends Fragment {
         return view;
     }
 
-    public void onButtonPressed(Uri uri) {
-        /*if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }*/
+    private void SendComment(View v) {
+        try {
+            String text = txtComment.getText().toString();
+
+            /*Call the method in the interface to post a comment*/
+            Call<JSONObject> call  = apiInterface.doPostComment( text,0,mStore.getId());
+
+            call.enqueue(new Callback<JSONObject>() {
+                @Override
+                public void onResponse(Call<JSONObject> call, retrofit2.Response<JSONObject> response) {
+                    if (response.isSuccessful() ) {
+                        Toast.makeText(getContext(), "Your comment is saved", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<JSONObject> call, Throwable t) {
+                    Toast.makeText(getContext(), "Sorry, comment not saved!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
-/*    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+    private void SendRate( float rating){
+        try{
+
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("rating", rating);
+
+            /*Call the method in the interface to send the rating*/
+            Call<JsonObject> call  = apiInterface.doPutStoreRate(mStore.getId(), jsonObject);
+
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                    if (response.isSuccessful() ) {
+                        Toast.makeText(getContext(), "Your rate is saved", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Toast.makeText(getContext(), "Sorry, rate not saved!", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
-    }*/
-
-/*    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }*/
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }

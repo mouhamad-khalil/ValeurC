@@ -1,25 +1,37 @@
 package com.isae.mohamad.mahallat.Classes;
 
+import com.google.gson.annotations.SerializedName;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+
+import static com.isae.mohamad.mahallat.Classes.utilities.Constants.SERVER_IP;
 
 /**
  * Created by mohamad on 08/30/2018.
  */
 
-public class User {
-    private String id;
+public class User implements Serializable {
+    @SerializedName("id")
+    private int id;
+    @SerializedName("username")
     private String username;
+    @SerializedName("email")
     private String email;
+    @SerializedName("name")
     private String name;
+    @SerializedName("lastname")
     private String lastname;
+    @SerializedName("password")
     private String password;
+    @SerializedName("image")
     private String image;
 
-    public User(String id, String username, String email, String name, String lastname,String password ,String image) {
+    public User(int id, String username, String email, String name, String lastname,String password ,String image) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -33,13 +45,13 @@ public class User {
     public User(JSONObject object)
     {
         try {
-            this.id = object.getString("id");
+            this.id = object.getInt("id");
             this.username = object.getString("username");
             this.email = object.getString("email");
             this.name = object.getString("name");
             this.lastname = object.getString("lastname");
             this.password = object.getString("password");
-            this.image = object.getString("image");
+            this.image = SERVER_IP + object.getString("image");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -60,7 +72,7 @@ public class User {
         return user;
     }
 
-    public String getId(){return this.id;}
+    public int getId(){return this.id;}
     public String getUsername(){return  this.username;}
     public String getEmail(){return this.email;}
     public String getName(){return this.name;}

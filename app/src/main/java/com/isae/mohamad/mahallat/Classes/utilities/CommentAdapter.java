@@ -11,6 +11,7 @@ import com.isae.mohamad.mahallat.Classes.Comment;
 import com.isae.mohamad.mahallat.R;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by mohamad on 09/22/2018.
@@ -23,7 +24,7 @@ public class CommentAdapter extends ArrayAdapter<Comment> {
         TextView date;
     }
 
-    public CommentAdapter(Context context, ArrayList<Comment> comments) {
+    public CommentAdapter(Context context, List<Comment> comments) {
         super(context, R.layout.list_comment, comments);
     }
 
@@ -51,7 +52,7 @@ public class CommentAdapter extends ArrayAdapter<Comment> {
             }
             // Populate the data from the data object via the viewHolder object
             // into the template view.
-            viewHolder.username.setText(comment.getUsername());
+            viewHolder.username.setText(comment.getUser().getUsername());
             viewHolder.text.setText(comment.getText());
             viewHolder.date.setText(comment.getCreatedAt());
         }

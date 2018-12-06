@@ -1,41 +1,47 @@
 package com.isae.mohamad.mahallat;
 
-import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.isae.mohamad.mahallat.Classes.User;
-import com.isae.mohamad.mahallat.Classes.utilities.Constants;
+import com.isae.mohamad.mahallat.Classes.utilities.APIClient;
+import com.isae.mohamad.mahallat.Classes.utilities.APIInterface;
 
 import org.json.JSONObject;
 
-import static com.isae.mohamad.mahallat.Classes.utilities.Constants.User_Register_API;
+import retrofit2.Call;
+import retrofit2.Callback;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    RequestQueue requestQueue; // This is our requests queue to process our HTTP requests.
     TextView txtEmail, txtFirstName, txtLastName, txtUsername, txtPassword;
+    APIInterface apiInterface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-        requestQueue = Volley.newRequestQueue(getApplicationContext());
 
         txtEmail =(TextView)findViewById(R.id.txtEmail);
         txtFirstName =(TextView)findViewById(R.id.txtFirstName);
         txtLastName =(TextView)findViewById(R.id.txtLastName);
-        txtUsername =(TextView)findViewById(R.id.txtUsername);
+        txtUsername =(TextView)findViewById(R.id.lblUsername);
         txtPassword =(TextView)findViewById(R.id.txtPassword);
+
+        /*Create handle for the RetrofitInstance interface*/
+        apiInterface = APIClient.getClient().create(APIInterface.class);
+
+        Button btnRegister = (Button) findViewById(R.id.btnRegister);
+        btnRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Register(view);
+            }
+        });
     }
 
     public void Register(View v)
@@ -46,27 +52,28 @@ public class RegisterActivity extends AppCompatActivity {
         String username = txtUsername.getText().toString();
         String password = txtPassword.getText().toString();
 
-        User user = new User("0",username,email,firstName,lastName,password,"");
-        JSONObject jsonUser = user.ToJson();
+        User user = new User(0,username,email,firstName,lastName,password,"");
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.POST, User_Register_API, jsonUser, new Response.Listener<JSONObject>() {
+        /*Call the method in the interface to register a user*/
+        Call<JSONObject> call  = apiInterface.doUserRegister( user);
 
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Toast.makeText(getApplicationContext(),"The user was registered Successfully",Toast.LENGTH_SHORT).show();
-                        Intent LoginIntent = new Intent(getApplicationContext(), LoginActivity.class);
-                        startActivity(LoginIntent);
-                    }
-                }, new Response.ErrorListener() {
+        call.enqueue(new Callback<JSONObject>() {
+            @Override
+            public void onResponse(Call<JSONObject> call, retrofit2.Response<JSONObject> response) {
+                if (response.isSuccessful() ) {
+                    Toast.makeText(getApplicationContext(), "You have registered, thank you!", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), response.message(), Toast.LENGTH_SHORT).show();
+                }
+            }
 
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(),"Sorry the user not registered!",Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-        // Access the RequestQueue through your singleton class.
-        requestQueue.add(jsonObjectRequest);
+            @Override
+            public void onFailure(Call<JSONObject> call, Throwable t) {
+                Toast.makeText(getApplicationContext(), "Sorry, there is a problem!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

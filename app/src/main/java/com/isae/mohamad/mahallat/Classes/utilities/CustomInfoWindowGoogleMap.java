@@ -35,11 +35,12 @@ public class CustomInfoWindowGoogleMap implements GoogleMap.InfoWindowAdapter {
 
     @Override
     public View getInfoContents(final Marker marker) {
-        View view = ((Activity)context).getLayoutInflater()
+        View view = ((Activity) context).getLayoutInflater()
                 .inflate(R.layout.custom_infowindow, null);
 
+        final InfoWindowData infoWindowData = (InfoWindowData) marker.getTag();
+
         TextView name_tv = view.findViewById(R.id.name);
-        TextView details_tv = view.findViewById(R.id.txtDetails);
         final ImageView image = view.findViewById(R.id.pic);
 
         RatingBar ratingBar = view.findViewById(R.id.ratingBar);
@@ -47,22 +48,24 @@ public class CustomInfoWindowGoogleMap implements GoogleMap.InfoWindowAdapter {
         TextView txtCategory = view.findViewById(R.id.txtCategory);
 
         name_tv.setText(marker.getTitle());
-        details_tv.setText(marker.getSnippet());
 
-        InfoWindowData infoWindowData = (InfoWindowData) marker.getTag();
+        final boolean isLoaded = infoWindowData.getIsLoaded();
 
         ratingBar.setRating(Float.parseFloat(infoWindowData.getRating()));
         txtLikes.setText(infoWindowData.getLikes());
         txtCategory.setText(infoWindowData.getCategory());
+
         GlideApp.with(image.getContext())
                 .asBitmap()
                 .load(infoWindowData.getImage())
-                .fitCenter()
+                .centerCrop()
                 .placeholder(R.drawable.spinner)
                 .listener(new RequestListener<Bitmap>() {
                     @Override
                     public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
-                        image.setImageBitmap(resource);
+                        infoWindowData.setIsLoaded(true);
+                        if(!isLoaded)
+                            marker.showInfoWindow();
                         return false;
                     }
 
@@ -73,6 +76,7 @@ public class CustomInfoWindowGoogleMap implements GoogleMap.InfoWindowAdapter {
 
                 })
                 .into(image);
+
         return view;
     }
 }

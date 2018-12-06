@@ -2,7 +2,6 @@ package com.isae.mohamad.mahallat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,6 +9,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -18,29 +18,25 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Geofence;
-import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
@@ -52,23 +48,28 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
+import com.isae.mohamad.mahallat.Classes.Category;
 import com.isae.mohamad.mahallat.Classes.Store;
-import com.isae.mohamad.mahallat.Classes.utilities.Constants;
-import com.isae.mohamad.mahallat.Classes.utilities.CustomInfoWindowGoogleMap;
-import com.isae.mohamad.mahallat.Classes.utilities.GeofenceTrasitionService;
-import com.isae.mohamad.mahallat.Classes.utilities.GeofencingManager;
-import com.isae.mohamad.mahallat.Classes.utilities.InfoWindowData;
-import com.isae.mohamad.mahallat.Classes.utilities.StoreGeofence;
+import com.isae.mohamad.mahallat.Classes.utilities.*;
 
-import org.json.JSONArray;
-
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+
+import static com.isae.mohamad.mahallat.Classes.utilities.Constants.GEOFENCE_RADIUS;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        LocationListener, OnMarkerClickListener,GoogleMap.OnInfoWindowClickListener,ResultCallback<Status> {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,LocationListener,OnMarkerClickListener,
+        GoogleMap.OnInfoWindowClickListener,ResultCallback<Status>, GeofencingManager.GeofencingManagerCallbacks {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
@@ -86,45 +87,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     SupportMapFragment mFragment;
     Marker mCurrLocation;
 
+    private static final String mCurrLocationTitle = "You are here!";
+
     private DrawerLayout mDrawerLayout;
+    private Spinner mSpinner;
 
     private GeofencingManager mGeofencingManager;
     private static final long GEO_DURATION = 60 * 60 * 1000;
-    private static final String GEOFENCE_REQ_ID = "My Geofence";
-    private static final float GEOFENCE_RADIUS = 500.0f; // in meters
-    private final int GEOFENCE_REQ_CODE = 0;
-    private Marker geoFenceMarker;
     // Stores the PendingIntent used to request geofence monitoring.
-    private PendingIntent mGeofenceRequestIntent;
-    RequestQueue requestQueue;
-    List<Geofence> mGeofenceList;
+    HashMap<Integer ,Store> mStores;
+    HashMap<Integer ,Marker> mStoresMarkers;
 
-    /**
-     * Create a PendingIntent that triggers GeofenceTransitionIntentService when a geofence
-     * transition occurs.
-     */
-    private PendingIntent getGeofenceTransitionPendingIntent() {
-        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
-        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
+    FloatingActionButton mLoginButton;
 
-    public static Intent makeNotificationIntent(Context context, String msg) {
-        Intent intent = new Intent( context, MainActivity.class );
-        intent.putExtra( "Notification", msg );
-        return intent;
-    }
+    APIInterface apiInterface;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            setContentView(R.layout.activity_maps);
+            setContentView(R.layout.activity_main);
             final Context context = getApplicationContext();
+
+            mSpinner = (Spinner) findViewById(R.id.spinner);
+            // load categories for spinner data
+            LoadSpinner(context);
+
             // Construct a FusedLocationProviderClient.
             mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-            FloatingActionButton fab = findViewById(R.id.fab);
-            fab.setOnClickListener(new View.OnClickListener() {
+            mLoginButton = findViewById(R.id.fab);
+            mLoginButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     Intent LoginIntent = new Intent(context, LoginActivity.class);
@@ -136,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             location.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    ShowMyLocation();
+                    getDeviceLocation();
                 }
             });
             mFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -144,28 +138,51 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             mDrawerLayout = findViewById(R.id.drawer_layout);
 
-            ActionBar actionbar = getSupportActionBar();
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            actionbar.setHomeAsUpIndicator(R.drawable.ic_launcher_background);
+            ActionBar actionBar = getSupportActionBar();
+            actionBar.setHomeAsUpIndicator(R.drawable.menu);
 
-            requestQueue = Volley.newRequestQueue(context);
+            if(MyApplication.IsLoggedIn()) {
+                mLoginButton.setVisibility(View.GONE);
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
+            else {
+                mLoginButton.setVisibility(View.VISIBLE);
+                actionBar.setDisplayHomeAsUpEnabled(false);
+            }
+            NavigationView navigationView = findViewById(R.id.nav_view);
+            navigationView.setNavigationItemSelectedListener(
+                    new NavigationView.OnNavigationItemSelectedListener() {
+                        @Override
+                        public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                            // set item as selected to persist highlight
+                            menuItem.setChecked(true);
+                            // close drawer when item is tapped
+                            mDrawerLayout.closeDrawers();
+                            switch (menuItem.getItemId())
+                            {
+                                case R.id.nav_profile:
+                                    Intent ProfileIntent = new Intent(context, ProfileActivity.class);
+                                    startActivityForResult(ProfileIntent,1);
+                                    break;
+                                case R.id.nav_favorites:
+                                    Intent FavoritesIntent = new Intent(context, FavoritesActivity.class);
+                                    startActivityForResult(FavoritesIntent,1);                                    break;
+                                case R.id.nav_logout:
+                                    // Remove Credentials and IsLoggedIn
+                                    MyApplication.EraseCredentials();
+                                    mLoginButton.setVisibility(View.VISIBLE);
+                                    getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+                                    break;
+                            }
+
+                            return true;
+                        }
+                    });
+
 
             // Instantiate a new geofence storage area.
-            mGeofencingManager = new GeofencingManager(context);
-            mGeofenceList = new ArrayList<Geofence>();
-            loadStores();
+            mGeofencingManager = new GeofencingManager(this);
 
-            /*mapFragment.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-                @Override
-                public void onMyLocationChange(Location location) {
-                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    if(mCircle == null || mMarker == null){
-                        drawMarkerWithCircle(latLng);
-                    }else{
-                        updateMarkerWithCircle(latLng);
-                    }
-                }
-            });*/
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -175,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                if(mDrawerLayout.isDrawerOpen(GravityCompat.START))
+                if(!mDrawerLayout.isDrawerOpen(GravityCompat.START))
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 else
                     mDrawerLayout.closeDrawers();
@@ -185,30 +202,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-
     @Override
     public void onMapReady(GoogleMap map) {
-        mMap = map;
-        enableMyLocationIfPermitted();
-
-        mMap.getUiSettings().setZoomControlsEnabled(true);
-        //mMap.setMinZoomPreference(11);
-        mMap.getUiSettings().setZoomGesturesEnabled(true);
-        mMap.getUiSettings().setScrollGesturesEnabled(true);
-        mMap.getUiSettings().setTiltGesturesEnabled(true);
-        mMap.getUiSettings().setRotateGesturesEnabled(true);
-        buildGoogleApiClient();
-
-        mGoogleApiClient.connect();
         try {
-            ShowMyLocation();
-        } catch (Exception e) {
+            mMap = map;
+            enableMyLocationIfPermitted();
+
+            mMap.getUiSettings().setZoomControlsEnabled(true);
+            mMap.getUiSettings().setZoomGesturesEnabled(true);
+            mMap.getUiSettings().setScrollGesturesEnabled(true);
+            mMap.getUiSettings().setTiltGesturesEnabled(true);
+            mMap.getUiSettings().setRotateGesturesEnabled(true);
+            buildGoogleApiClient();
+
+            Category category = (Category) mSpinner.getSelectedItem();
+            if (category != null)
+                loadStores(category.getId());
+            else
+                loadStores(0);
+
+            mGoogleApiClient.connect();
+            try {
+                getDeviceLocation();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            // Set a listener for marker click.
+            mMap.setOnMarkerClickListener(this);
+            mMap.setOnInfoWindowClickListener(this);
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
         }
-        // Set a listener for marker click.
-        mMap.setOnMarkerClickListener(this);
-        mMap.setOnInfoWindowClickListener(this);
-
     }
 
     private void enableMyLocationIfPermitted() {
@@ -221,15 +247,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     LOCATION_PERMISSION_REQUEST_CODE);
             mLocationPermissionGranted = true;
         } else if (mMap != null) {
-            //mMap.setMyLocationEnabled(true);
             mLocationPermissionGranted = true;
         }
     }
 
     private void showDefaultLocation() {
-        Toast.makeText(this, "Location permission not granted, " +
-                        "showing default location",
-                Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Location permission not granted, " + "showing default location", Toast.LENGTH_SHORT).show();
         LatLng redmond = new LatLng(47.6739881, -122.121512);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(redmond));
     }
@@ -249,20 +272,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
 
         }
-    }
-
-    public void ShowMyLocation() {
-        //mMap.setMinZoomPreference(12);
-        getDeviceLocation();
-        /*CircleOptions circleOptions = new CircleOptions();
-        circleOptions.center(new LatLng(location.getLatitude(),
-                location.getLongitude()));
-
-        circleOptions.radius(200);
-        circleOptions.fillColor(Color.RED);
-        circleOptions.strokeWidth(6);
-
-        mMap.addCircle(circleOptions);*/
     }
 
     private Location getDeviceLocation() {
@@ -292,12 +301,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             circleOptions.fillColor(Color.BLUE);
                             circleOptions.strokeWidth(1);
 
-                            MarkerOptions markerOptions = new MarkerOptions();
-                            markerOptions.position(redmond);
-                            mMap.addMarker(markerOptions.title("You are here"));
+                            //remove previous current location marker and add new one at current position
+                            if (mCurrLocation != null) {
+                                mCurrLocation.remove();
+                            }
+
+                            mCurrLocation = CreateMarker(redmond, mCurrLocationTitle, false);
 
                             mMap.moveCamera(CameraUpdateFactory.newLatLng(redmond));
-
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
@@ -316,21 +327,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     /** Called when the user clicks a marker. */
     @Override
     public boolean onMarkerClick(final Marker marker) {
-
-        InfoWindowData info = new InfoWindowData();
-info = (InfoWindowData)marker.getTag();
-        // Retrieve the data from the marker.
-        /*Integer clickCount = (Integer) marker.getTag();
-
-        // Check if a click count was set, then display the click count.
-        if (clickCount != null) {
-            clickCount = clickCount + 1;
-            marker.setTag(clickCount);
-            Toast.makeText(this,
-                    marker.getTitle() +
-                            " has been clicked " + clickCount + " times.",
-                    Toast.LENGTH_SHORT).show();
-        }*/
         try {
             if (marker.isInfoWindowShown())
                 marker.hideInfoWindow();
@@ -350,7 +346,16 @@ info = (InfoWindowData)marker.getTag();
     @Override
     protected void onResume() {
         super.onResume();
-        Toast.makeText(this,"Resuming",Toast.LENGTH_SHORT).show();
+        Log.d("Resume","Resuming");
+
+        if(MyApplication.IsLoggedIn()) {
+            mLoginButton.setVisibility(View.GONE);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+        else {
+            mLoginButton.setVisibility(View.VISIBLE);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        }
         if(mGoogleApiClient != null) {
             mLocationRequest = new LocationRequest();
             mLocationRequest.setInterval(5000); //5 second
@@ -361,6 +366,21 @@ info = (InfoWindowData)marker.getTag();
                 return;
             }
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode==RESULT_OK){
+            if(MyApplication.IsLoggedIn()) {
+                mLoginButton.setVisibility(View.GONE);
+                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            }
+            else {
+                mLoginButton.setVisibility(View.VISIBLE);
+                getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            }
         }
     }
 
@@ -392,27 +412,24 @@ info = (InfoWindowData)marker.getTag();
         if (mLastLocation != null) {
             //place marker at current position
             mMap.setMinZoomPreference(11);
-            //mMap.clear();
             latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-            markerForGeofence(latLng);
-            MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.position(latLng);
-            markerOptions.title("Current Position");
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-
-            InfoWindowData info = new InfoWindowData();
-            info.setImage("https://nyoobserver.files.wordpress.com/2015/12/unnamed2.jpg");
-            info.setRating("2");
-            info.setLikes("20");
-            info.setCategory("Restaurant");
 
             CustomInfoWindowGoogleMap customInfoWindow = new CustomInfoWindowGoogleMap(this);
             mMap.setInfoWindowAdapter(customInfoWindow);
-            mCurrLocation = mMap.addMarker(markerOptions);
+
+            //remove previous current location marker and add new one at current position
+            if (mCurrLocation != null) {
+                mCurrLocation.remove();
+            }
+
+            InfoWindowData info = new InfoWindowData();
+            info.setId(0);
+
+            mCurrLocation = CreateMarker(latLng, mCurrLocationTitle, false);
             mCurrLocation.setTag(info);
-            mCurrLocation.showInfoWindow();
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         }
+
 
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(5000); //5 second
@@ -444,100 +461,122 @@ info = (InfoWindowData)marker.getTag();
             mCurrLocation.remove();
         }
         latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
-        markerOptions.title("Current Position");
-        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-        mCurrLocation = mMap.addMarker(markerOptions);
 
-        markerForGeofence(latLng);
+        mCurrLocation = CreateMarker(latLng, mCurrLocationTitle, false);
 
+        DrawGeofence(latLng);
+        mGeofencingManager.manageMonitoredRegions(location);
 
         Log.d(TAG,"Location Changed");
-
-        //If you only need one location, unregister the listener
-        //LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        Intent StoreIntent = new Intent(getApplicationContext(), StoreActivity.class);
-        startActivity(StoreIntent);
+        InfoWindowData info = (InfoWindowData) marker.getTag();
+        if(info.getId() > 0)
+        {
+            Intent StoreIntent = new Intent(getApplicationContext(), StoreActivity.class);
+            StoreIntent.putExtra("Store", mStores.get(info.getId()));
+            startActivity(StoreIntent);
+        }
     }
 
-    public void loadStores() {
+    private void loadStores(int categoryId) {
 
-        JsonArrayRequest arrReq = new JsonArrayRequest(Request.Method.GET, Constants.Get_All_Stores_API,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
+        /*Create handle for the RetrofitInstance interface*/
+        apiInterface = APIClient.getClient().create(APIInterface.class);
 
-                        if (response.length() > 0) {
-                            ArrayList<Store> stores = new ArrayList<Store>();
-                            stores = Store.fromJson(response);
-                            createGeofences(stores);
-                        }
 
-                    }
-                },
+        /*Call the method in the interface to get the store data*/
+        if(categoryId == 0) {
+            Call<List<Store>> call = apiInterface.doGetAllStores();
 
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-
-                        Log.e("Volley", error.toString());
+            call.enqueue(new Callback<List<Store>>() {
+                @Override
+                public void onResponse(Call<List<Store>> call, retrofit2.Response<List<Store>> response) {
+                    if (response.isSuccessful()) {
+                        // Create GeoFences will fill the Stores HashMap And the Store Marker HashMap
+                        mGeofencingManager.start(createGeofences(response.body()));
                     }
                 }
-        );
-        requestQueue.add(arrReq);
+
+                @Override
+                public void onFailure(Call<List<Store>> call, Throwable t) {
+                    Toast.makeText(MainActivity.this, "Something went wrong...Please try later!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        else {
+            Call<JsonObject> call = apiInterface.doGetStoreList(categoryId);
+
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                    if (response.isSuccessful()) {
+                        JsonElement element = response.body().get("data");
+                        Type listType = new TypeToken<List<Store>>() {
+                        }.getType();
+
+                        List<Store> stores = new Gson().fromJson(element, listType);
+                        // Create GeoFences will fill the Stores HashMap And the Store Marker HashMap
+                        mGeofencingManager.start(createGeofences(stores));
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Toast.makeText(MainActivity.this, "Something went wrong...Please try later!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
-    // Create a Geofence
-    private Geofence createGeofence(LatLng latLng, float radius ) {
-        Log.d(TAG, "createGeofence");
-        return new Geofence.Builder()
-                .setRequestId(GEOFENCE_REQ_ID)
-                .setCircularRegion( latLng.latitude, latLng.longitude, radius)
-                .setExpirationDuration( GEO_DURATION )
-                .setTransitionTypes( Geofence.GEOFENCE_TRANSITION_ENTER
-                        | Geofence.GEOFENCE_TRANSITION_EXIT )
-                .build();
+    private void LoadSpinner(final Context context)
+    {
+        /*Create handle for the RetrofitInstance interface*/
+        apiInterface = APIClient.getClient().create(APIInterface.class);
+        /*Call the method in the interface to get the categories*/
+        Call<List<Category>> call  = apiInterface.doGetCategories();
+
+        call.enqueue(new Callback<List<Category>>() {
+            @Override
+            public void onResponse(Call<List<Category>> call, retrofit2.Response<List<Category>> response) {
+                if (response.isSuccessful() ) {
+
+                    List<Category> categories = response.body();
+                    categories.add(0,new Category(0,"All", "", ""));
+
+                    final SpinnerAdapter adapter;
+                    adapter = new SpinnerAdapter(context,android.R.layout.simple_spinner_item,categories);
+                    mSpinner.setAdapter(adapter);
+                    // You can create an anonymous listener to handle the event when is selected an spinner item
+                    mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+                        @Override
+                        public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id)
+                        {
+                            Category category = adapter.getItem(position);
+                            loadStores(category.getId());
+                        }
+                        @Override
+                        public void onNothingSelected(AdapterView<?> adapter) {  }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Category>> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Something went wrong...Please try later!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 
-    // Create a Geofence Request
-    private GeofencingRequest createGeofenceRequest( Geofence geofence ) {
-        Log.d(TAG, "createGeofenceRequest");
-        return new GeofencingRequest.Builder()
-                .setInitialTrigger( GeofencingRequest.INITIAL_TRIGGER_ENTER )
-                .addGeofence( geofence )
-                .build();
-    }
-
-    private PendingIntent createGeofencePendingIntent() {
-        Log.d(TAG, "createGeofencePendingIntent");
-        if ( geoFencePendingIntent != null )
-            return geoFencePendingIntent;
-
-        Intent intent = new Intent( this, GeofenceTrasitionService.class);
-        return PendingIntent.getService(
-                this, GEOFENCE_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT );
-    }
-
-    // Add the created GeofenceRequest to the device's monitoring list
-    private void addGeofence(GeofencingRequest request) {
-        Log.d(TAG, "addGeofence");
-        if (checkPermission())
-            LocationServices.GeofencingApi.addGeofences(
-                    mGoogleApiClient,
-                    request,
-                    createGeofencePendingIntent()
-            ).setResultCallback(this);
-    }
     @Override
     public void onResult(@NonNull Status status) {
         Log.i(TAG, "onResult: " + status);
         if ( status.isSuccess() ) {
-            drawGeofence();
+            //;
         } else {
             // inform about fail
         }
@@ -545,51 +584,28 @@ info = (InfoWindowData)marker.getTag();
 
     // Draw Geofence circle on GoogleMap
     private Circle geoFenceLimits;
-    private void drawGeofence() {
+    private void DrawGeofence(LatLng position) {
         Log.d(TAG, "drawGeofence()");
 
         if ( geoFenceLimits != null )
             geoFenceLimits.remove();
 
         CircleOptions circleOptions = new CircleOptions()
-                .center( geoFenceMarker.getPosition())
+                .center( position)
                 .strokeColor(Color.argb(50, 70,70,70))
                 .fillColor( Color.argb(100, 150,150,150) )
                 .radius( GEOFENCE_RADIUS );
         geoFenceLimits = mMap.addCircle( circleOptions );
     }
 
-    private void markerForGeofence(LatLng latLng) {
-        Log.i(TAG, "markerForGeofence("+latLng+")");
-        String title = latLng.latitude + ", " + latLng.longitude;
-        // Define marker options
-        MarkerOptions markerOptions = new MarkerOptions()
-                .position(latLng)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
-                .title(title);
-        if ( mMap!=null ) {
-            // Remove last geoFenceMarker
-            if (geoFenceMarker != null)
-                geoFenceMarker.remove();
 
-            geoFenceMarker = mMap.addMarker(markerOptions);
-            startGeofence();
-        }
-    }
+    public List<StoreGeofence> createGeofences(List<Store> stores) {
+        // return StoreGeoFence for the GeoFenceManager Start();
+        List<StoreGeofence> storeGeofenceList = new ArrayList<StoreGeofence>();
 
-    // Start Geofence creation process
-    private void startGeofence() {
-        Log.i(TAG, "startGeofence()");
-        if( geoFenceMarker != null ) {
-            Geofence geofence = createGeofence( geoFenceMarker.getPosition(), GEOFENCE_RADIUS );
-            GeofencingRequest geofenceRequest = createGeofenceRequest( geofence );
-            addGeofence( geofenceRequest );
-        } else {
-            Log.e(TAG, "Geofence marker is null");
-        }
-    }
-
-    public void createGeofences(ArrayList<Store> stores) {
+        // Fill Stores HashMap AND Stores Markers HashMap
+        mStoresMarkers = new HashMap<Integer, Marker>();
+        mStores = new HashMap<Integer, Store>();
         for(Store store : stores)
         {
             // Create internal "flattened" objects containing the geofence data.
@@ -597,17 +613,70 @@ info = (InfoWindowData)marker.getTag();
                 store.getId(),store.getLatitude(), store.getLongitude(), GEOFENCE_RADIUS,GEO_DURATION,
                 Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT);
 
-            // Store these flat versions in SharedPreferences and add them to the geofence list.
-            mGeofencingManager.setGeofence(store.getId(), storeGeofence);
-            mGeofenceList.add(storeGeofence.toGeofence());
+            storeGeofenceList.add(storeGeofence);
+            this.mStoresMarkers.put(store.getId(), getMarkerForStore(store));
+            this.mStores.put(store.getId(), store);
         }
+        return storeGeofenceList;
     }
 
-    // Check for permission to access Location
-    private boolean checkPermission() {
-        Log.d(TAG, "checkPermission()");
-        // Ask for permission if it wasn't granted yet
-        return (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED );
+    private Marker getMarkerForStore(Store store)
+    {
+        Marker marker = CreateMarker(new LatLng(store.getLatitude(),store.getLongitude()), store.getName(), true);
+
+        InfoWindowData info = new InfoWindowData();
+        info.setId(store.getId());
+        info.setImage(store.getImage());
+        info.setRating(String.valueOf(store.getRating()));
+        info.setLikes(String.valueOf(store.getLikes()));
+        info.setCategory(store.getCategory().getName());
+
+        marker.setTag(info);
+
+        return marker;
+    }
+
+    private Marker CreateMarker(LatLng position, String title, boolean isStore)
+    {
+        Marker marker ;
+        MarkerOptions markerOptions = new MarkerOptions()
+                    .position(position)
+                    .title(title);
+        if(!isStore) {
+            markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.blue_dot));
+            DrawGeofence(position);
+        }
+
+        marker = mMap.addMarker(markerOptions);
+
+        return marker;
+    }
+
+    @Override
+    public void OnRegionStateUpdated(final int storeId, GeofencingManager.STATE state) {
+        if(state.name() == "EXITED") {
+            if (mStoresMarkers.containsKey(storeId)) {
+                // Remove Marker from the map
+                mStoresMarkers.get(storeId).remove();
+                // Remove the marker from the HashMap
+                mStoresMarkers.remove(storeId);
+            }
+        }
+        else // State = Entered
+        {
+            if(!mStoresMarkers.containsKey(storeId))
+            {
+                //******************* for API Level 24 ONLY ************************
+                //mStoresList.stream().filter(s ->s.getId() == storeId).findFirst();
+
+                if(mStores.containsKey(storeId))
+                {
+                    //Add the Marker to the Map and keep track of it with the HashMap
+                    //getMarkerForStore returns the Marker object
+                    this.mStoresMarkers.put(storeId, getMarkerForStore(mStores.get(storeId)));
+                }
+            }
+        }
+        Toast.makeText(this,state.name(),Toast.LENGTH_SHORT).show();
     }
 }
