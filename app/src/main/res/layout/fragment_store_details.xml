@@ -144,6 +144,26 @@
             android:text="4:00 PM"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/txtOpen" />
+
+        <TextView
+            android:id="@+id/txtLikes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="12dp"
+            android:text="1"
+            app:layout_constraintEnd_toStartOf="@+id/btnLike"
+            app:layout_constraintTop_toTopOf="@+id/btnLike" />
+
+        <ImageButton
+            android:id="@+id/btnLike"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="90dp"
+            android:src="@drawable/like"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/txtClose" />
     </android.support.constraint.ConstraintLayout>
 
     </android.support.v4.widget.NestedScrollView>

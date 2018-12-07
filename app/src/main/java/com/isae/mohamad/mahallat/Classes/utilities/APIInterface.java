@@ -54,10 +54,20 @@ public interface  APIInterface {
     @POST(Constants.Put_Store_Rate_API)
     Call<JsonObject> doPutStoreRate(@Path(value = "store_id", encoded = true) int storeId, @Body JsonObject rating);
 
+    // Put Store Like
+    @Headers("Content-Type: application/json")
+    @POST(Constants.Put_Store_Like_API)
+    Call<JsonObject> doPutStoreLike(@Body JsonObject storeId);
+
     // Put Product Rate
     @Headers("Content-Type: application/json")
     @POST(Constants.Put_Product_Rate_API)
     Call<JsonObject> doPutProductRate(@Path(value = "product_id", encoded = true) int productId, @Body JsonObject rating);
+
+    // Put Product Like
+    @Headers("Content-Type: application/json")
+    @POST(Constants.Put_Product_Like_API)
+    Call<JsonObject> doPutProductLike(@Body JsonObject storeId);
 
     // Add Product to Favorites
     @POST(Constants.Put_Product_Favorite_API)

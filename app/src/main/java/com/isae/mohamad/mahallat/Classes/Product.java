@@ -29,12 +29,16 @@ public class Product implements Serializable {
     private String price;
     @SerializedName("likeCount")
     private int likes;
+    @SerializedName("liked")
+    private boolean liked;
     @SerializedName("rating")
     private float rating;
     @SerializedName("rated")
     private boolean rated;
     @SerializedName("rate")
     private float rate;
+    @SerializedName("favorited")
+    private boolean favorited;
     @SerializedName("comments")
     private List<Comment> comments;
 
@@ -62,8 +66,10 @@ public class Product implements Serializable {
         return price;
     }
     public int getLikes(){return this.likes;}
+    public boolean getLiked() {return this.liked;}
     public float getRating(){return this.rating;}
     public boolean getRated() {return this.rated;}
     public float getRate() {return this.rate;}
+    public boolean getFavorited() {return this.favorited;}
     public List<Comment> getComments() {return this.comments;}
 }

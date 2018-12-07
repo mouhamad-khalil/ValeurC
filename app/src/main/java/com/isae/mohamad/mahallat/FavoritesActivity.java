@@ -1,12 +1,17 @@
 package com.isae.mohamad.mahallat;
 
 import android.content.Context;
+import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -16,8 +21,12 @@ import com.isae.mohamad.mahallat.Classes.utilities.APIInterface;
 import com.isae.mohamad.mahallat.Classes.utilities.MyApplication;
 import com.isae.mohamad.mahallat.Classes.utilities.ProductAdapter;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,9 +43,24 @@ public class FavoritesActivity extends AppCompatActivity {
 
         try {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            listView = (ListView) findViewById(R.id.lvItems);
 
             getFavoriteProducts(this);
+
+            listView = (ListView) findViewById(R.id.lvItems);
+            // When the user clicks on the ListItem
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                @Override
+                public void onItemClick(AdapterView<?> a, View v, int position, long id) {
+                    try {
+                        Product product = (Product) listView.getItemAtPosition(position);
+                        Intent ProductIntent = new Intent(v.getContext(), ProductDetailsActivity.class);
+                        ProductIntent.putExtra("Product", (Serializable) product);
+                        startActivity(ProductIntent);
+                    }
+                    catch(Exception e){}
+                }
+            });
         }
         catch (Exception e)
         {
@@ -67,6 +91,7 @@ public class FavoritesActivity extends AppCompatActivity {
                                 }.getType();
 
                                 List<Product> products = new Gson().fromJson(element, listType);
+
                                 ProductAdapter productAdapter = new ProductAdapter(c, products);
                                 listView.setAdapter(productAdapter);
                             } catch (Exception e) {

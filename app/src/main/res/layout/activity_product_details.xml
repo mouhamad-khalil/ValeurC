@@ -204,14 +204,38 @@
                 android:id="@+id/chbkFav"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="96dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="32dp"
+                android:layout_marginTop="55dp"
+                android:buttonTint="@color/DuskYellow"
                 android:text="Favorite"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintStart_toEndOf="@+id/userRatingBar"
+                app:layout_constraintStart_toEndOf="@+id/lblReview"
                 app:layout_constraintTop_toBottomOf="@+id/lblPrice" />
+
+            <TextView
+                android:id="@+id/txtLikes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="20dp"
+                android:text="1"
+                app:layout_constraintEnd_toStartOf="@+id/btnLike"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toEndOf="@+id/userRatingBar"
+                app:layout_constraintTop_toBottomOf="@+id/chbkFav" />
+
+            <ImageButton
+                android:id="@+id/btnLike"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/chbkFav"
+                app:srcCompat="@drawable/like" />
         </android.support.constraint.ConstraintLayout>
 
     </android.support.v4.widget.NestedScrollView>

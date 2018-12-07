@@ -6,8 +6,8 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@android:color/white</item>
-        <item name="android:spinnerStyle">@style/mySpinnerItemStyle</item>
-
+        <item name="checkboxStyle">@style/MyCheckBoxStyle</item>
+        <item name="android:checkboxStyle">@style/MyCheckBoxStyle</item>
     </style>
 
     <style name="PrimaryActionButton" parent="Theme.AppCompat.Light">
@@ -19,7 +19,6 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
@@ -29,7 +28,9 @@
         <item name="colorControlNormal">@color/DarkGray</item>
     </style>
 
-    <style name="mySpinnerItemStyle" parent="@android:style/Widget.Holo.Spinner">
-        <item name="android:textColor">@color/White</item>
+    <style name="MyCheckBoxStyle" parent="Base.Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="android:textColor">@drawable/my_check_box_style</item>
+        <item name="buttonTint">@drawable/my_check_box_style</item>
     </style>
+
 </resources>

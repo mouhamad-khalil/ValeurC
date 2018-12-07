@@ -1,11 +1,13 @@
 package com.isae.mohamad.mahallat;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RatingBar;
 import android.widget.TextView;
@@ -14,6 +16,7 @@ import android.widget.Toast;
 import com.google.gson.JsonObject;
 import com.isae.mohamad.mahallat.Classes.Comment;
 import com.isae.mohamad.mahallat.Classes.Store;
+import com.isae.mohamad.mahallat.Classes.User;
 import com.isae.mohamad.mahallat.Classes.utilities.APIClient;
 import com.isae.mohamad.mahallat.Classes.utilities.APIInterface;
 import com.isae.mohamad.mahallat.Classes.utilities.CommentAdapter;
@@ -32,8 +35,16 @@ public class StoreDetailsFragment extends Fragment {
 
     private static final String ARG_PARAM = "Store";
     private Store mStore;
-    TextView txtComment;
-    RatingBar mRatingBar;
+    private TextView txtComment;
+    private RatingBar mRatingBar;
+    private TextView txtLikes;
+    private ImageButton btnLike;
+
+    private CommentAdapter adapter;
+    private List<Comment> CommentsList;
+    private User user;
+
+    boolean isLoggedIn = false;
 
     APIInterface apiInterface;
 
@@ -90,6 +101,9 @@ public class StoreDetailsFragment extends Fragment {
                 ((TextView) view.findViewById(R.id.txtOpen)).setText(formatShort.format(openHour));
                 ((TextView) view.findViewById(R.id.txtClose)).setText(formatShort.format(closeHour));
 
+                txtLikes = (TextView) view.findViewById(R.id.txtLikes);
+                txtLikes.setText(String.valueOf(mStore.getLikes()));
+
                 // User Review
                 mRatingBar = (RatingBar)view.findViewById(R.id.ratingBar);
                 if(mStore.getRated())
@@ -100,26 +114,44 @@ public class StoreDetailsFragment extends Fragment {
                 btnSend.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        SendComment(v);
+                        if(isLoggedIn)
+                            SendComment(v);
+                        else
+                            Toast.makeText(getContext(), "Please Login first!", Toast.LENGTH_SHORT).show();
                     }
                 });
 
                 mRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener(){
                     @Override
                     public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                        SendRate(rating);
+                        if(isLoggedIn)
+                            SendRate(rating);
+                        else
+                        {
+                            mRatingBar.setRating(0);
+                            Toast.makeText(getContext(), "Please Login first!", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
 
-                btnSend.setOnClickListener(new View.OnClickListener() {
+                btnLike = (ImageButton) view.findViewById(R.id.btnLike);
+                btnLike.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        SendComment(v);
+
+                        if(isLoggedIn)
+                            PutLike();
+                        else
+                            Toast.makeText(getContext(), "Please Login first!", Toast.LENGTH_SHORT).show();
                     }
                 });
 
-                List<Comment> CommentsList = mStore.getComments();
-                CommentAdapter adapter = new CommentAdapter(this.getContext(), CommentsList);
+                if(mStore.getLiked())
+                    btnLike.setBackgroundColor(Color.rgb(249,187,40));
+
+
+                CommentsList = mStore.getComments();
+                adapter = new CommentAdapter(this.getContext(), CommentsList);
 
                 ListView listView = (ListView) view.findViewById(R.id.LvComments);
 
@@ -129,8 +161,10 @@ public class StoreDetailsFragment extends Fragment {
             String credentials =  MyApplication.GetSavedCredentials();
             if(credentials == null)
                 apiInterface = APIClient.getClient().create(APIInterface.class);
-            else
+            else {
                 apiInterface = APIClient.getClient(credentials).create(APIInterface.class);
+                isLoggedIn = true;
+            }
 
         }
         catch (Exception e)
@@ -144,7 +178,11 @@ public class StoreDetailsFragment extends Fragment {
 
     private void SendComment(View v) {
         try {
+            if(user == null)
+                user = MyApplication.GetUserInfo();
+
             String text = txtComment.getText().toString();
+            final Comment comment = new Comment(0,user,text, "");
 
             /*Call the method in the interface to post a comment*/
             Call<JSONObject> call  = apiInterface.doPostComment( text,0,mStore.getId());
@@ -153,6 +191,9 @@ public class StoreDetailsFragment extends Fragment {
                 @Override
                 public void onResponse(Call<JSONObject> call, retrofit2.Response<JSONObject> response) {
                     if (response.isSuccessful() ) {
+                        CommentsList.add(comment);
+                        adapter.notifyDataSetChanged();
+                        txtComment.setText("Comment...");
                         Toast.makeText(getContext(), "Your comment is saved", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -188,6 +229,44 @@ public class StoreDetailsFragment extends Fragment {
                 @Override
                 public void onFailure(Call<JsonObject> call, Throwable t) {
                     Toast.makeText(getContext(), "Sorry, rate not saved!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void PutLike( ){
+        try{
+
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("storeId", mStore.getId());;
+
+            Call<JsonObject> call  = apiInterface.doPutStoreLike(jsonObject);
+
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                    if (response.isSuccessful() ) {
+                        String result = response.body().get("success").getAsString();
+                        int likes = Integer.parseInt(txtLikes.getText().toString());
+                        if(result.contains("removed"))
+                        {
+                            txtLikes.setText(String.valueOf(likes - 1));
+                            btnLike.setBackgroundColor(Color.TRANSPARENT);
+                        }
+                        else
+                        {
+                            txtLikes.setText(String.valueOf(likes +1));
+                            btnLike.setBackgroundColor(Color.rgb(249,187,40));
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Toast.makeText(getContext(), "Sorry, adding Failed!", Toast.LENGTH_SHORT).show();
                 }
             });
         }

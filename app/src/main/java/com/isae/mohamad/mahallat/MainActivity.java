@@ -216,11 +216,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             buildGoogleApiClient();
 
             Category category = (Category) mSpinner.getSelectedItem();
+            /*
             if (category != null)
                 loadStores(category.getId());
             else
                 loadStores(0);
-
+*/
             mGoogleApiClient.connect();
             try {
                 getDeviceLocation();
@@ -603,6 +604,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // return StoreGeoFence for the GeoFenceManager Start();
         List<StoreGeofence> storeGeofenceList = new ArrayList<StoreGeofence>();
 
+        if(mStoresMarkers != null && mStoresMarkers.size() > 0)
+        {
+            for (Integer storeId : mStoresMarkers.keySet())
+            {
+                Marker marker = (mStoresMarkers.get(storeId));
+                marker.setVisible(false);
+                // Remove Marker from the map
+                marker.remove();
+            }
+        }
+
         // Fill Stores HashMap AND Stores Markers HashMap
         mStoresMarkers = new HashMap<Integer, Marker>();
         mStores = new HashMap<Integer, Store>();
@@ -677,6 +689,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         }
-        Toast.makeText(this,state.name(),Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this,state.name(),Toast.LENGTH_SHORT).show();
     }
 }

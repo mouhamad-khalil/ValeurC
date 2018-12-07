@@ -2,6 +2,7 @@ package com.isae.mohamad.mahallat;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RatingBar;
@@ -22,6 +24,7 @@ import com.bumptech.glide.request.target.Target;
 import com.google.gson.JsonObject;
 import com.isae.mohamad.mahallat.Classes.Comment;
 import com.isae.mohamad.mahallat.Classes.Product;
+import com.isae.mohamad.mahallat.Classes.User;
 import com.isae.mohamad.mahallat.Classes.utilities.APIClient;
 import com.isae.mohamad.mahallat.Classes.utilities.APIInterface;
 import com.isae.mohamad.mahallat.Classes.utilities.CommentAdapter;
@@ -37,12 +40,17 @@ import retrofit2.Callback;
 
 public class ProductDetailsActivity extends AppCompatActivity {
 
-    Product mProduct;
-    TextView txtComment;
-    RatingBar mProductRatingBar;
-    RatingBar mUserRatingBar;
+    private Product mProduct;
+    private TextView txtComment;
+    private RatingBar mUserRatingBar;
+    private TextView txtLikes;
+    private ImageButton btnLike;
 
-    boolean isLoggedIn = false;
+    private List<Comment> CommentsList;
+    private CommentAdapter adapter;
+    private User user;
+
+    private boolean isLoggedIn = false;
 
     APIInterface apiInterface;
 
@@ -60,7 +68,9 @@ public class ProductDetailsActivity extends AppCompatActivity {
             if(mProduct != null) {
 
                 ((TextView) findViewById(R.id.txtDescription)).setText(mProduct.getDescription());
-                ((TextView) findViewById(R.id.txtPrice)).setText(mProduct.getPrice());
+                ((TextView) findViewById(R.id.txtPrice)).setText(mProduct.getPrice() + "$");
+                txtLikes = findViewById(R.id.txtLikes);
+                txtLikes.setText(String.valueOf(mProduct.getLikes()));
 
                 final ImageView mBackground = ((ImageView)findViewById(R.id.background));
 
@@ -85,7 +95,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
                         .into(mBackground);
 
                 // Product Rating
-                mProductRatingBar = (RatingBar)findViewById(R.id.productRatingBar);
+                ((RatingBar)findViewById(R.id.productRatingBar)).setRating(mProduct.getRating());
 
                 // User Rating Review
                 mUserRatingBar = (RatingBar)findViewById(R.id.userRatingBar);
@@ -96,11 +106,18 @@ public class ProductDetailsActivity extends AppCompatActivity {
                 mUserRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener(){
                     @Override
                     public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                        SendRate(rating);
+                        if(isLoggedIn)
+                            SendRate(rating);
+                        else
+                        {
+                            mUserRatingBar.setRating(0);
+                            Toast.makeText(ProductDetailsActivity.this, "Please Login first!", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
 
-                CheckBox chkAddFavorite = (CheckBox) findViewById(R.id.chbkFav);
+                final CheckBox chkAddFavorite = (CheckBox) findViewById(R.id.chbkFav);
+                chkAddFavorite.setChecked(mProduct.getFavorited());
 
                 chkAddFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
                 {
@@ -110,10 +127,25 @@ public class ProductDetailsActivity extends AppCompatActivity {
                             AddToFavorite();
                         else {
                             Toast.makeText(ProductDetailsActivity.this, "Please Login first!", Toast.LENGTH_SHORT).show();
-                            buttonView.setChecked(false);
+                            chkAddFavorite.setChecked(false);
                         }
                     }
                 });
+
+                btnLike = (ImageButton) findViewById(R.id.btnLike);
+                btnLike.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        if(isLoggedIn)
+                            PutLike();
+                        else
+                            Toast.makeText(ProductDetailsActivity.this, "Please Login first!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                if(mProduct.getLiked())
+                    btnLike.setBackgroundColor(Color.rgb(249,187,40));
 
                 Button btnSend = (Button) findViewById(R.id.btnSend);
                 btnSend.setOnClickListener(new View.OnClickListener() {
@@ -127,8 +159,8 @@ public class ProductDetailsActivity extends AppCompatActivity {
                     }
                 });
 
-                List<Comment> CommentsList = mProduct.getComments();
-                CommentAdapter adapter = new CommentAdapter(this, CommentsList);
+                CommentsList = mProduct.getComments();
+                adapter = new CommentAdapter(this, CommentsList);
 
                 ListView listView = (ListView) findViewById(R.id.LvComments);
 
@@ -152,7 +184,11 @@ public class ProductDetailsActivity extends AppCompatActivity {
 
     public void SendComment(View v) {
         try {
+            if(user == null )
+                user = MyApplication.GetUserInfo();
+
             String text = txtComment.getText().toString();
+            final Comment comment = new Comment(0, user, text, "");
 
             /*Call the method in the interface to post a comment*/
             Call<JSONObject> call  = apiInterface.doPostComment( text,mProduct.getId(),0);
@@ -161,6 +197,9 @@ public class ProductDetailsActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<JSONObject> call, retrofit2.Response<JSONObject> response) {
                     if (response.isSuccessful() ) {
+                        CommentsList.add(comment);
+                        adapter.notifyDataSetChanged();
+                        txtComment.setText("Comment...");
                         Toast.makeText(ProductDetailsActivity.this, "Your comment is saved", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -215,6 +254,44 @@ public class ProductDetailsActivity extends AppCompatActivity {
                     if (response.isSuccessful() ) {
 
                         Toast.makeText(getApplicationContext(), "Added to favorites", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Toast.makeText(getApplicationContext(), "Sorry, adding Failed!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void PutLike( ){
+        try{
+
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("productId", mProduct.getId());;
+            /*Call the method in the interface to add to favorites*/
+            Call<JsonObject> call  = apiInterface.doPutProductLike(jsonObject);
+
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                    if (response.isSuccessful() ) {
+                        String result = response.body().get("success").getAsString();
+                        int likes = Integer.parseInt(txtLikes.getText().toString());
+                         if(result.contains("removed"))
+                         {
+                             txtLikes.setText(String.valueOf(likes - 1));
+                             btnLike.setBackgroundColor(Color.TRANSPARENT);
+                         }
+                         else
+                         {
+                             txtLikes.setText(String.valueOf(likes +1));
+                             btnLike.setBackgroundColor(Color.rgb(249,187,40));
+                         }
                     }
                 }
 
