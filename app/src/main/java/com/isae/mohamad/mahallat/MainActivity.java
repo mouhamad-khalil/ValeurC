@@ -110,6 +110,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             setContentView(R.layout.activity_main);
             final Context context = getApplicationContext();
 
+            enableMyLocationIfPermitted();
+
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+
             mSpinner = (Spinner) findViewById(R.id.spinner);
             // load categories for spinner data
             LoadSpinner(context);
@@ -206,7 +211,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap map) {
         try {
             mMap = map;
-            enableMyLocationIfPermitted();
+            if(!mLocationPermissionGranted)
+                enableMyLocationIfPermitted();
 
             mMap.getUiSettings().setZoomControlsEnabled(true);
             mMap.getUiSettings().setZoomGesturesEnabled(true);
@@ -215,13 +221,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.getUiSettings().setRotateGesturesEnabled(true);
             buildGoogleApiClient();
 
-            Category category = (Category) mSpinner.getSelectedItem();
-            /*
-            if (category != null)
-                loadStores(category.getId());
-            else
-                loadStores(0);
-*/
             mGoogleApiClient.connect();
             try {
                 getDeviceLocation();
@@ -368,6 +367,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         }
+
+        Category category = (Category) mSpinner.getSelectedItem();
+
+        if (category != null)
+            loadStores(category.getId());
+        else
+            loadStores(0);
     }
 
     @Override
@@ -436,11 +442,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mLocationRequest.setInterval(5000); //5 second
         mLocationRequest.setFastestInterval(3000); //3 second
         mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        //mLocationRequest.setSmallestDisplacement(0.1F); //1/10 meter
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 

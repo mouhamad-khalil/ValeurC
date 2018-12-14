@@ -199,7 +199,6 @@ public class ProductDetailsActivity extends AppCompatActivity {
                     if (response.isSuccessful() ) {
                         CommentsList.add(comment);
                         adapter.notifyDataSetChanged();
-                        txtComment.setText("Comment...");
                         Toast.makeText(ProductDetailsActivity.this, "Your comment is saved", Toast.LENGTH_SHORT).show();
                     }
                 }

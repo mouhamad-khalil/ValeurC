@@ -49,8 +49,8 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:ems="10"
+            android:hint="Comment..."
             android:inputType="textMultiLine"
-            android:text="Comment..."
             app:layout_constraintEnd_toStartOf="@+id/btnSend"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -73,11 +73,10 @@
             android:id="@+id/btnSend"
             android:layout_width="wrap_content"
             android:layout_height="43dp"
-            android:layout_marginTop="195dp"
             android:onClick="SendComment"
             android:text="Send"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@+id/txtComment" />
 
         <TextView
             android:id="@+id/lblDescription"
@@ -160,10 +159,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:layout_marginTop="90dp"
+            android:layout_marginTop="8dp"
             android:src="@drawable/like"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/txtClose" />
+            app:layout_constraintTop_toTopOf="@+id/ratingBar" />
     </android.support.constraint.ConstraintLayout>
 
     </android.support.v4.widget.NestedScrollView>

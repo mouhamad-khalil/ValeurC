@@ -193,7 +193,6 @@ public class StoreDetailsFragment extends Fragment {
                     if (response.isSuccessful() ) {
                         CommentsList.add(comment);
                         adapter.notifyDataSetChanged();
-                        txtComment.setText("Comment...");
                         Toast.makeText(getContext(), "Your comment is saved", Toast.LENGTH_SHORT).show();
                     }
                 }

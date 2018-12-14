@@ -149,8 +149,8 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:ems="10"
+                android:hint="Comment..."
                 android:inputType="textMultiLine"
-                android:text="Comment..."
                 app:layout_constraintEnd_toStartOf="@+id/btnSend"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
@@ -173,10 +173,9 @@
                 android:id="@+id/btnSend"
                 android:layout_width="wrap_content"
                 android:layout_height="43dp"
-                android:layout_marginTop="190dp"
                 android:text="Send"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="@+id/txtComment" />
 
             <TextView
                 android:id="@+id/lblPrice"
@@ -206,13 +205,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"
                 android:layout_marginStart="32dp"
-                android:layout_marginTop="55dp"
                 android:buttonTint="@color/DuskYellow"
                 android:text="Favorite"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toEndOf="@+id/lblReview"
-                app:layout_constraintTop_toBottomOf="@+id/lblPrice" />
+                app:layout_constraintTop_toTopOf="@+id/lblReview" />
 
             <TextView
                 android:id="@+id/txtLikes"

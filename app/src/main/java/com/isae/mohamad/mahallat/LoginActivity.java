@@ -121,7 +121,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean isPasswordValid(String password) {
-        return password.length() > 4;
+        return password.length() > 0;
     }
 
 
@@ -191,12 +191,13 @@ public class LoginActivity extends AppCompatActivity {
                                     if(MyApplication.SaveUserInfo(user))
                                         if(MyApplication.SaveCredentials(authToken))
                                             finish();
-                            }
-                        }
 
-                        if(user == null) {
-                            mPasswordView.setError(getString(R.string.error_incorrect_password));
-                            mPasswordView.requestFocus();
+                            }
+
+                            if(user == null) {
+                                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                                mPasswordView.requestFocus();
+                            }
                         }
                     }
 
